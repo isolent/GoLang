@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Snickers",
+    "price": 300,
+    "rating": 2
+  },
+  {
+    "name": "KitKat",
+    "price": 600,
+    "rating": 1
+  },
+  {
+    "name": "Mars",
+    "price": 450,
+    "rating": 3
+  },
+  {
+    "name": "Bounty",
+    "price": 450,
+    "rating": 2
+  }
+]

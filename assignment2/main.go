@@ -44,7 +44,7 @@ func main() {
 	http.HandleFunc("/showall", showall)
 	http.HandleFunc("/filter", filterItems)
 	http.HandleFunc("/search", searchByName)
-	http.HandleFunc("/rating", giveRating)
+	// http.HandleFunc("/rating", giveRating)
 
 	http.ListenAndServe(":8181", nil)
 }
@@ -76,13 +76,11 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("username")
 		pass := r.FormValue("password")
 
-
 		_, err = db.Exec(`INSERT INTO users (name, password) VALUES ($1, $2)`, username, pass)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
 
 		fmt.Fprintf(w, "User %s created successfully!", username)
 	} else {
@@ -120,7 +118,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	http.Redirect(w, r, "/actions", http.StatusSeeOther)
 }
 
@@ -137,7 +134,6 @@ func showall(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 	var data []Item
 
-
 	for rows.Next() {
 		var i Item
 		err := rows.Scan(&i.Name, &i.Price, &i.Raiting)
@@ -146,7 +142,6 @@ func showall(w http.ResponseWriter, r *http.Request) {
 		}
 		data = append(data, i)
 	}
-
 
 	fmt.Fprintf(w, "<table>")
 	fmt.Fprintf(w, " <h2> All items in store </h2><tr><th>Name</th><th>Price</th><th>Raiting</th></tr>")
@@ -169,7 +164,6 @@ func filterItems(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 	var data []Item
 
-
 	for rows.Next() {
 		var i Item
 		err := rows.Scan(&i.Name, &i.Price, &i.Raiting)
@@ -178,7 +172,6 @@ func filterItems(w http.ResponseWriter, r *http.Request) {
 		}
 		data = append(data, i)
 	}
-
 
 	fmt.Fprintf(w, "<table>")
 	fmt.Fprintf(w, " <h2> Filtering by price </h2> <tr><th>Name</th><th>Price</th><th>Raiting</th></tr>")
@@ -217,7 +210,6 @@ func searchByName(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
 
 	itemName := r.FormValue("name")
 
@@ -258,34 +250,33 @@ func searchByName(w http.ResponseWriter, r *http.Request) {
 	CheckError(err)
 }
 
+// func giveRating(w http.ResponseWriter, r *http.Request) {
 
-func giveRating(w http.ResponseWriter, r *http.Request) {
+// 	db_connection := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+// 		host, port, user, ps, dbname)
+// 	db, err = sql.Open("postgres", db_connection)
+// 	CheckError(err)
+// 	defer db.Close()
 
-	db_connection := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, ps, dbname)
-	db, err = sql.Open("postgres", db_connection)
-	CheckError(err)
-	defer db.Close()
+// 	id := r.FormValue("id")
+// 	newValue := r.FormValue("new_value")
 
-	id := r.FormValue("id")
-	newValue := r.FormValue("new_value")
+// 	if (id == "" || newValue == "" ){
+// 		fmt.Fprintf(w, "ID or value can not be empty")
+// 	} else  {
 
-	if (id == "" || newValue == "" ){
-		fmt.Fprintf(w, "ID or value can not be empty")
-	} else  {
+// 		stmt, err := db.Prepare("UPDATE store SET rating = (rating + $1)/2 WHERE id = $2")
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusInternalServerError)
+// 			return
+// 		}
+// 		defer stmt.Close()
 
-		stmt, err := db.Prepare("UPDATE store SET rating = (rating + $1)/2 WHERE id = $2")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer stmt.Close()
-
-		_, err = stmt.Exec(newValue, id)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}	
-	http.Redirect(w, r, "templates/showall.html", http.StatusSeeOther)
-}
+// 		_, err = stmt.Exec(newValue, id)
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusInternalServerError)
+// 			return
+// 		}
+// 	}
+// 	http.Redirect(w, r, "templates/showall.html", http.StatusSeeOther)
+// }

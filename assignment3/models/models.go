@@ -1,4 +1,5 @@
-package pkg
+package models
+
 import "gorm.io/gorm"
 
 type Book struct {
@@ -6,4 +7,11 @@ type Book struct {
 	Title       string  `gorm:"unique"`
 	Description string  `json:"description"`
 	Cost        float32 `json:"cost"`
+}
+
+type User struct {
+	gorm.Model
+	Name        string  `gorm:"unique"`
+	Email 		string  `gorm:"unique"`
+	Password  	string  `gorm:"unique"`
 }

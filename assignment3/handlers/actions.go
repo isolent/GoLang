@@ -2,94 +2,54 @@ package handlers
 
 import (
 	"encoding/json"
-	"golang/assignment3/database"
+	// "golang/assignment3/database"
 	"golang/assignment3/models"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gorilla/mux"
 	"gorm.io/gorm"
+	// "github.com/gin-gonic/gin"
 )
 
-func Hello(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{
-		"response": gin.H{
-			"method":  http.MethodGet,
-			"code":    http.StatusOK,
-			"message": "Hello world",
-		},
-	})
+type Connection struct {
+	DB *gorm.DB
 }
 
-func Registration(context *gin.Context) {
-	var user *models.User
+func (c *Connection) AddBook(w http.ResponseWriter, r *http.Request) {
+	var book []models.Book
 
-	decode := json.NewDecoder(context.Request.Body).Decode(&user)
-
-	if decode != nil {
-		context.JSON(http.StatusOK, gin.H{
-			"response": decode.Error(),
-		})
+	if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	isExist := database.IsExistUserByName(user.Name)
+	c.DB.Create(&book)
 
-	if !isExist {
-		user := &models.User{Name: user.Name, Email: user.Email, Password: user.Password}
-		isSuccessAdded := database.Add(user)
-		if isSuccessAdded == nil {
-			context.JSON(http.StatusOK, gin.H{
-				"response": gin.H{
-					"code":    http.StatusOK,
-					"message": "You are successfully registered",
-				},
-			})
-		}
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(book)
+}
+
+func (c *Connection) GetAllBooks(w http.ResponseWriter, r *http.Request) {
+	title := r.URL.Query().Get("title")
+	books := make([]models.Book, 0)
+	if title != "" {
+		c.DB.Where("title LIKE ?", title+"%").Find(&books)
 	} else {
-		context.JSON(http.StatusOK, gin.H{
-			"response": "user with this name already exists",
-		})
-		return
+		c.DB.Find(&books)
 	}
-
-}
-
-var db *gorm.DB
-
-func GetBooks(c *gin.Context) {
-	var books []models.Book
-	db.Find(&books)
-	c.JSON(http.StatusOK, books)
-}
-
-func AddBook(c *gin.Context) {
-	// parse the JSON request body into an Body struct
-	var book models.Book
-	err := c.BindJSON(&book)
+	err := json.NewEncoder(w).Encode(books)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// save the book to the database
-	result := db.Create(&book)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
-		return
-	}
-
-	// return the newly created book
-	c.JSON(http.StatusOK, book)
 }
 
-
-
-// func AddBook(c *gin.Context) {
-// 	var book []models.Book
-// 	if err := c.BindJSON(&book); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 		return
-// 	}
-// 	db.Create(&book)
-// 	c.JSON(http.StatusCreated, book)
-// }
+func (c *Connection) GetBookByID(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	var book models.Book
+	if err := c.DB.First(&book, params["id"]).Error; err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	json.NewEncoder(w).Encode(book)
+}

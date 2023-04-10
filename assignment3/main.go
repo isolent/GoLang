@@ -2,20 +2,55 @@ package main
 
 import (
 	"fmt"
-	"golang/assignment3/database"
-	"golang/assignment3/handlers"
+	"log"
+	"os"
+	"strconv"
 
-	"github.com/gin-gonic/gin"
+	// "golang/assignment3/database"
+	"golang/assignment3/handlers"
+	"golang/assignment3/models"
+	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
+
+
 func main() {
-	database.Init()
-	router := gin.Default()
+
+	err := godotenv.Load()
+
+	// Create DSN string for connecting to Postgres database
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Almaty",
+		os.Getenv("DB_HOST"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_PORT"))
+
+	// Parse port to integer
+	_, err = strconv.Atoi(os.Getenv("DB_PORT"))
+	if err != nil {
+		log.Fatalf("Error parsing DB_PORT: %v", err)
+	}
+
+	// Connect to Postgres database using gorm
+	db, _ := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err := db.AutoMigrate(&models.Book{}); err != nil {
+		log.Fatal(err)
+	}
 	
-	router.GET("/hello", handlers.Hello)
-	router.POST("/registration", handlers.Registration)
-	// router.GET("/books", handlers.GetBooks)
-	router.POST("/books", handlers.AddBook)
-	fmt.Println("Server at 8080")
-	router.Run(":8080")
+	c := handlers.Connection{DB: db}
+
+	router := mux.NewRouter()
+	
+	router.HandleFunc("/books/", c.GetAllBooks).Methods("GET")
+	router.HandleFunc("/books/{id}/", c.GetBookByID).Methods("GET")
+	router.HandleFunc("/addbook/", c.AddBook).Methods("POST")
+	// router.HandleFunc("/updatebooks/{id}/", c.UpdateBook).Methods("PUT")
+	// router.HandleFunc("/deletebooks/{id}/", c.DeleteBookByID).Methods("DELETE")
+	//router.HandleFunc("/search/", controller.SearchBookByTitle).Methods("GET")
+	// router.HandleFunc("/sorted-books/", c.GetSortedBooks).Methods("GET")
+
+	fmt.Println("Server at 8181")
+	http.ListenAndServe(":8181", router)
 }

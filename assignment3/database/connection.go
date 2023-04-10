@@ -1,10 +1,8 @@
 package database
 
 import (
-	"fmt"
 	"golang/assignment3/models"
 	"log"
-	"time"
 	_ "github.com/lib/pq"
 	"github.com/jinzhu/gorm"
 )
@@ -16,24 +14,10 @@ func Init() *gorm.DB{
 
 	if err != nil {
 		log.Fatal(err)
+		// panic(err)
 	}
 
-	db.AutoMigrate(&models.Book{}, &models.User{})
-
-	return db
-}
-
-func GetDB() *gorm.DB{
-	if db == nil {
-		db = Init()
-		var sleep = time.Duration(1)
-		for db == nil {
-			sleep = sleep * 2
-			fmt.Print("db is not available, plz wait for 2 seconds", sleep)
-			time.Sleep(sleep * time.Second)
-			db = Init()
-		}
-	}
+	db.AutoMigrate(&models.Book{})
 
 	return db
 }

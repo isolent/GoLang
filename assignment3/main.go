@@ -23,7 +23,6 @@ func main() {
 
 	err := godotenv.Load()
 
-	// Create DSN string for connecting to Postgres database
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Almaty",
 		os.Getenv("DB_HOST"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_PORT"))
 
@@ -33,7 +32,6 @@ func main() {
 		log.Fatalf("Error parsing DB_PORT: %v", err)
 	}
 
-	// Connect to Postgres database using gorm
 	db, _ := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err := db.AutoMigrate(&models.Book{}); err != nil {
 		log.Fatal(err)
@@ -46,10 +44,10 @@ func main() {
 	router.HandleFunc("/books/", c.GetAllBooks).Methods("GET")
 	router.HandleFunc("/books/{id}/", c.GetBookByID).Methods("GET")
 	router.HandleFunc("/addbook/", c.AddBook).Methods("POST")
-	// router.HandleFunc("/updatebooks/{id}/", c.UpdateBook).Methods("PUT")
-	// router.HandleFunc("/deletebooks/{id}/", c.DeleteBookByID).Methods("DELETE")
-	//router.HandleFunc("/search/", controller.SearchBookByTitle).Methods("GET")
-	// router.HandleFunc("/sorted-books/", c.GetSortedBooks).Methods("GET")
+	router.HandleFunc("/updatebooks/{id}/", c.UpdateBook).Methods("PUT")
+	router.HandleFunc("/deletebooks/{id}/", c.DeleteBookByID).Methods("DELETE")
+	router.HandleFunc("/search/", c.SearchBookByTitle).Methods("GET")
+	router.HandleFunc("/sorted-books/", c.GetSortedBooks).Methods("GET")
 
 	fmt.Println("Server at 8181")
 	http.ListenAndServe(":8181", router)

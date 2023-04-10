@@ -46,8 +46,9 @@ func main() {
 	router.HandleFunc("/addbook/", c.AddBook).Methods("POST")
 	router.HandleFunc("/updatebooks/{id}/", c.UpdateBook).Methods("PUT")
 	router.HandleFunc("/deletebooks/{id}/", c.DeleteBookByID).Methods("DELETE")
-	router.HandleFunc("/search/", c.SearchBookByTitle).Methods("GET")
-	router.HandleFunc("/sorted-books/", c.GetSortedBooks).Methods("GET")
+	router.HandleFunc("/search/{title/}", c.SearchBookByTitle).Methods("GET")
+	router.HandleFunc("/sortedBooks/", c.GetSortedBooks).Methods("GET")
+	router.HandleFunc("/sortedBooksDesc/", c.DescGetSortedBooks).Methods("GET")
 
 	fmt.Println("Server at 8181")
 	http.ListenAndServe(":8181", router)

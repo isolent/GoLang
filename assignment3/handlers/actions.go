@@ -86,6 +86,7 @@ func (c *Connection) SearchBookByTitle(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(books)
 }
 
+
 func (c *Connection) GetSortedBooks(w http.ResponseWriter, r *http.Request) {
 	var book []models.Book
 	sort := r.URL.Query().Get("sort")

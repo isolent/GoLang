@@ -1,13 +1,14 @@
 package database
 
 import (
-	"golang/assignment3/models"
+	"golang/models"
 	"log"
-	_ "github.com/lib/pq"
+
 	"github.com/jinzhu/gorm"
+	_ "github.com/lib/pq"
 )
 
-var db *gorm.DB
+// var db *gorm.DB
 
 func Init() *gorm.DB{
 	db, err := gorm.Open("postgres", "user=postgres password=1234 dbname=goshop sslmode=disable")

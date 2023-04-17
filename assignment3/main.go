@@ -6,10 +6,8 @@ import (
 	"golang/models"
 	"log"
 	"net/http"
-	// "strconv"
 
 	"github.com/gorilla/mux"
-	// "github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

@@ -1,130 +1,35 @@
-package main
+sync.WaitGroup{}
 
-import (
-	"context"
-	"encoding/json"
-	"net/http"
-	"os"
-	"os/signal"
-	"sync"
+ - это создание нового объекта типа sync.WaitGroup. WaitGroup - это синхронизирующий объект в Go, 
+который позволяет программе ожидать завершения выполнения нескольких заданий.
+Когда программа вызывает метод wg.Add(n), n добавляется к внутреннему счетчику WaitGroup.
+Затем, каждый раз, когда задание завершается, вызывается метод wg.Done(), 
+который уменьшает счетчик на 1 .
+В конце программы, вызывается метод wg.Wait(), который блокирует главную программу 
+до тех пор, пока счетчик не станет равным нулю. Когда это произойдет, главная программа 
+продолжает свою работу. Таким образом, создание нового объекта типа sync.WaitGroup означает создание нового 
+синхронизирующего объекта, который будет использоваться для ожидания завершения выполнения задания.
 
-	"github.com/go-telegram/bot"
-	"github.com/go-telegram/bot/models"
-)
 
-const (
-	unsplashAPIBaseURL = "https://api.unsplash.com"
-	unsplashRandomPath = "/photos/random"
-)
+incrementCounter() 
 
-type unsplashResponse struct {
-	URLs struct {
-		Regular string `json:"regular"`
-	} `json:"urls"`
-}
+- это функция, которая инкрементирует глобальную переменную counter 
+на 1 в потокобезопасном режиме. Когда функция вызывается, она получает эксклюзивный 
+доступ к counterMutex с помощью counterMutex.Lock(). Это гарантирует, что никакой 
+другой поток не сможет получить доступ к counter в то же время. Затем функция инкрементирует 
+counter на 1 и освобождает counterMutex с помощью counterMutex.Unlock(), позволяя другим 
+потокам получить доступ к counter, если они ждут на мьютексе. Таким образом, функция 
+incrementCounter() обеспечивает потокобезопасную инкрементацию глобальной переменной counter.
 
-func main() {
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer cancel()
 
-	wg := &sync.WaitGroup{}
-	mutex := &sync.Mutex{}
-	counter := 0
+UnsplashPhoto 
 
-	opts := []bot.Option{
-		bot.WithDefaultHandler(handler),
-	}
+- это пользовательский тип данных в языке программирования Go, 
+который представляет объект фотографии с сайта Unsplash. Он содержит вложенный 
+тип данных URLs, который в свою очередь содержит строку Regular. 
+а структура содержит только одно поле: URLs, которое само по себе является 
+структурой, содержащей только одно поле Regular.
+Поле Regular определено как строка и использует тег json:"regular". 
+Это означает, что когда объект типа UnsplashPhoto сериализуется в формат JSON, 
+значение поля Regular будет использоваться в качестве значения свойства "regular" в JSON-объекте
 
-	b, err := bot.New("6275836826:AAFkpwEdEnZa6YDcGR0TxFUtCjn7ySO4K4k", opts...)
-	if err != nil {
-		panic(err)
-	}
-	b.RegisterHandler(bot.HandlerTypeMessageText, "/img", bot.MatchTypeExact, handler)
-
-	b.Start(ctx)
-
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go incrementCounterWithWaitGroup(wg, &counter)
-	}
-
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go incrementCounterWithMutex(wg, mutex, &counter)
-	}
-
-	counterCh := make(chan int)
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-	}
-
-	go func() {
-		for {
-			select {
-			case c := <-counterCh:
-				mutex.Lock()
-				counter += c
-				mutex.Unlock()
-				wg.Done()
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
-
-	wg.Wait()
-}
-
-func handler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	if update.Message == nil {
-		return
-	}
-
-	imageURL, err := getRandomUnsplashImageURL()
-	if err != nil {
-		b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: update.Message.Chat.ID,
-			Text:   "DIDN'T GET IT",
-		})
-		return
-	}
-
-	b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID: update.Message.Chat.ID,
-		Text:   imageURL,
-	})
-}
-
-func getRandomUnsplashImageURL() (string, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodGet, unsplashAPIBaseURL+unsplashRandomPath, nil)
-	if err != nil {
-		return "", err
-	}
-	req.Header.Add("Authorization", "Client-ID iNm_s6QlxiEZdM4h4BK2GRBHbMCpGHpQmANRePORg3g")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	var unsplashResp unsplashResponse
-	err = json.NewDecoder(resp.Body).Decode(&unsplashResp)
-	if err != nil {
-		return "", err
-	}
-	return unsplashResp.URLs.Regular, nil
-}
-
-func incrementCounterWithWaitGroup(wg *sync.WaitGroup, counter *int) {
-	defer wg.Done()
-	*counter++
-}
-
-func incrementCounterWithMutex(wg *sync.WaitGroup, mutex *sync.Mutex, counter *int) {
-	defer wg.Done()
-	mutex.Lock()
-	*counter++
-	mutex.Unlock()
-}

@@ -49,7 +49,6 @@ func (c *Connection) GetBookByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(book)
 }
 
-
 func (c *Connection) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	var book models.Book

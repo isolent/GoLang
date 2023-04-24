@@ -14,7 +14,6 @@ import (
 
 func main() {
 
-	// err := godotenv.Load()
 
 	// dsn := "host=database user=postgres password=1234 dbname=assign3 port=5433 sslmode=disable"
 	dsn := "host=localhost user=postgres password=1234 dbname=assign3 port=5432 sslmode=disable"
